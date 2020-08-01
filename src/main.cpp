@@ -69,7 +69,7 @@ void loop() {
         break;
       case 'c':
         Serial.println("Slew Selected Axis in negative direction on the Selected Axis");
-        mount.move(selAxis, true, maxSpd);
+        mount.move(selAxis, false, maxSpd);
         break;
       case 'd':
         Serial.println("Slew Selected Axis in positive direction on the Selected Axis");

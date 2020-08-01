@@ -105,8 +105,8 @@ struct NexStarMessage {
 
 class NexStarBase {
 protected:
-    virtual int sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data,
-            NexStarMessage *resp);
+    virtual int sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data);
+    virtual int waitForResponse(NexStarMessage *resp);
 
 public:
     virtual int setPosition(uint8_t dest, uint32_t pos);
@@ -116,8 +116,6 @@ public:
     virtual int slewDone(uint8_t dest, bool *done);
     virtual int setGuiderate(uint8_t dest, bool dir, bool custom_rate, uint32_t rate);
     virtual int getVersion(uint8_t dest, char *major, char *minor);
-
-    int sendRawCommand(char *cmd, char *resp, uint8_t *resp_size);
 
     // Call this method periodically in the main loop
     virtual void run();

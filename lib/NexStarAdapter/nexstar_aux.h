@@ -37,8 +37,8 @@ public:
 
     void run() {};
 protected:
-    int sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data,
-            NexStarMessage *resp);
+    int sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data);
+    int waitForResponse(NexStarMessage *resp);
 
 private:
     int newMessage(NexStarMessage *msg, uint8_t dest, uint8_t id,
