@@ -36,12 +36,6 @@ public:
     int getApproach(uint8_t dest, bool *dir);
 
     void run() {};
-
-    //int setAutoGuiderate(uint8_t dest, uint8_t rate);
-    //int getAutoGuiderate(uint8_t dest, uint8_t *rate);
-    //int setBacklash(uint8_t dest, bool dir, uint8_t steps);
-    //int getBacklash(uint8_t dest, bool dir, uint8_t *steps);
-
 protected:
     int sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data,
             NexStarMessage *resp);

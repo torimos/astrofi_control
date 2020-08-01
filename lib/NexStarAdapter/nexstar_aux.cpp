@@ -54,8 +54,7 @@ int NexStarAux::init()
 // Fill NexStarMessage struct
 // data: payload data
 // size: size of payload data
-int NexStarAux::newMessage(NexStarMessage *msg, uint8_t dest, uint8_t id,
-                               uint8_t size, char* data)
+int NexStarAux::newMessage(NexStarMessage *msg, uint8_t dest, uint8_t id, uint8_t size, char* data)
 {
     if (size > MAX_PAYLOAD_SIZE) {
         return ERR_INVALID;
@@ -71,8 +70,8 @@ int NexStarAux::newMessage(NexStarMessage *msg, uint8_t dest, uint8_t id,
 }
 
 // Send a message and receive its response
-int NexStarAux::sendCommand(uint8_t dest, uint8_t id, uint8_t size,
-        char* data, NexStarMessage *resp)
+int NexStarAux::sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data,
+            NexStarMessage *resp)
 {
     NexStarMessage msg;
     char *bytes = (char*)(&msg);
@@ -103,29 +102,43 @@ int NexStarAux::sendCommand(uint8_t dest, uint8_t id, uint8_t size,
     Serial.print(msg.crc, 16);  Serial.print(' ');
 #endif
     digitalWrite(select_out_pin, HIGH); // receive_mode
+    
+    long int t0 = millis();
     while (digitalRead(select_in_pin) == LOW){
         delayMicroseconds(5);
+        if (millis() - t0 > RESP_TIMEOUT) {
+            Serial.println("ERR_TIMEOUT in last command");
+            return ERR_TIMEOUT;
+        }
     }
-    for (int ii = 0; ii < 1000; ii++) { 
-      if (digitalRead(select_in_pin) == LOW)
-        break;
-      delayMicroseconds(50);
+    t0 = millis();
+    while (true) {
+        if (digitalRead(select_in_pin) == LOW)
+            break;
+        delayMicroseconds(50);
+        if (millis() - t0 > RESP_TIMEOUT) {
+            Serial.println("ERR_TIMEOUT in last command");
+            return ERR_TIMEOUT;
+        }
     }
 
-    int t=0;
     unsigned int pos = 0;
     bytes = (char*)(resp);
-    while (t++<1000) {
-      delayMicroseconds(50);
-      if (serialAvailable()) {
-        unsigned char cc = serialRead();
-        bytes[pos++] = cc;
-      }
-      if (pos>4)
-      {
-        int sz = bytes[1];
-        if (sz == (pos-3)) break;
-      }
+    t0 = millis();
+    while (true) {
+        delayMicroseconds(50);
+        if (serialAvailable()) {
+            unsigned char cc = serialRead();
+            bytes[pos++] = cc;
+        }
+        if (pos>4) {
+            int sz = bytes[1];
+            if (sz == (pos-3)) break;
+        }
+        if (millis() - t0 > RESP_TIMEOUT) {
+            Serial.println("ERR_TIMEOUT in last command");
+            return ERR_TIMEOUT;
+        }
     }
 
 #if DEBUG
@@ -154,89 +167,6 @@ int NexStarAux::sendCommand(uint8_t dest, uint8_t id, uint8_t size,
     }
     return 0;
 }
-
-
-// // Send a message and receive its response
-// int NexStarAux::sendCommand(uint8_t dest, uint8_t id, uint8_t size,
-//         char* data, NexStarMessage *resp)
-// {
-//     NexStarMessage msg;
-//     char *bytes = (char*)(&msg);
-
-//     int ret = newMessage(&msg, dest, id, size, data);
-//     if (ret != 0) {
-//         return ret;
-//     }
-// #if DEBUG
-//     Serial.printf("[%d] sendCommand[dst=%x,id=%x,sz=%d](start)", millis(), dest, id, size);
-//     Serial.println();
-//     Serial.print(">> ");
-// #endif
-//     digitalWrite(select_out_pin, LOW); // send_mode
-//     for (int i = 0; i < size + 5; i++) {
-//         serialWrite(bytes[i]);
-// #if DEBUG
-//         if (bytes[i] < 10) Serial.print('0');
-//         Serial.print(bytes[i], 16);  Serial.print(' ');
-// #endif
-//     }
-//     serialWrite(msg.crc);
-//     serialFlush();
-// #if DEBUG
-//     if (msg.crc < 10) Serial.print('0');
-//     Serial.print(msg.crc, 16);  Serial.print(' ');
-// #endif
-
-//     digitalWrite(select_out_pin, HIGH); // receive_mode
-//     long int t0 = millis();
-//     delay(1);
-//     // wait while select pin is low
-//     while(digitalRead(select_in_pin) == HIGH) {
-//         if (millis() - t0 > RESP_TIMEOUT) {
-//             return ERR_TIMEOUT;
-//         }
-//         delay(1);
-//     }
-//     // wait while select pin is high
-//     while(digitalRead(select_in_pin) == LOW) {
-//         delay(1);
-//         if (millis() - t0 > RESP_TIMEOUT) {
-//             return ERR_TIMEOUT;
-//         }
-//     }
-
-//     bytes = (char*)(resp);
-//     unsigned int pos = 0;
-//     while (serialAvailable()) {
-//         bytes[pos++] = serialRead();
-//         if (pos >= sizeof(NexStarMessage)) {
-//             return ERR_BAD_SIZE;
-//         }
-//     }
-// #if DEBUG
-//     Serial.println();
-//     Serial.print("<< ");
-//     for (int ii = 0; ii < pos; ii++) {
-//         unsigned char cc =bytes[ii];
-//         if (cc < 0x10)
-//             Serial.print('0');
-//         Serial.print(cc, 16);
-//         Serial.print(' ');
-//     }
-//     if (pos>0)
-//       Serial.println();
-//     Serial.printf("[%d] sendCommand(end)", millis());
-//     Serial.println();
-// #endif
-//     if (pos <= sizeof(NexStarHeader) + 1) {
-//         return ERR_BAD_SIZE;
-//     }
-//     resp->crc = bytes[resp->header.length + 2];
-//     if (calcCRC(resp) != resp->crc) {
-//         return ERR_CRC;
-//     }
-//     return 0;
-// }
 
 int NexStarAux::setPosition(uint8_t dest, uint32_t pos)
 {
