@@ -105,8 +105,8 @@ struct NexStarMessage {
 
 class NexStarBase {
 protected:
-    virtual int sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data);
-    virtual int waitForResponse(NexStarMessage *resp);
+    virtual int sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data,
+            NexStarMessage *resp);
 
 public:
     virtual int setPosition(uint8_t dest, uint32_t pos);

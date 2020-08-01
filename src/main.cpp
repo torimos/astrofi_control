@@ -64,44 +64,51 @@ void loop() {
         Serial.println("AZM axis selected");
         break;
       case 'q':
-        Serial.println("Stop Slew of Selected Axis");
+        Serial.printf("Stop Slew of %x Axis", selAxis);
+        Serial.println();
         mount.move(selAxis, true, 0);
         break;
       case 'c':
-        Serial.println("Slew Selected Axis in negative direction on the Selected Axis");
+        Serial.printf("Slew %x Axis in negative direction", selAxis);
+        Serial.println();
         mount.move(selAxis, false, maxSpd);
         break;
       case 'd':
-        Serial.println("Slew Selected Axis in positive direction on the Selected Axis");
+        Serial.printf("Slew %x Axis in positive direction", selAxis);
+        Serial.println();
         mount.move(selAxis, true, maxSpd);
         break;
       case 'z':
-        Serial.println("Rotate in negative direction by 0x100000 (1/16 of a revolution)");
+        Serial.printf("Rotate %x in negative direction by 0x100000 (1/16 of a revolution)", selAxis);
+        Serial.println();
         mount.gotoPosition(selAxis, true, position[selAxis & 1] = (position[selAxis & 1] - 0x100000) & 0xFFFFFF);
         break;
       case 'a':
-        Serial.println("Rotate in positive direction by 0x100000 (1/16 of a revolution)");
+        Serial.printf("Rotate %x in positive direction by 0x100000 (1/16 of a revolution)", selAxis);
+        Serial.println();
         mount.gotoPosition(selAxis, true, position[selAxis & 1] = (position[selAxis & 1] + 0x100000) & 0xFFFFFF);
         break;
       case 's':
-        Serial.println("Set Selected Axis current position to 0x000000");
+        Serial.printf("Set %x Axis current position to 0x000000", selAxis);
+        Serial.println();
         mount.setPosition(selAxis, 0x000000);
         position[selAxis & 1] = 0x000000;
         break;
       case 'x':
-        Serial.println("Move Selected Axis to position 0x000000");
+        Serial.printf("Move %x Axis to position 0x000000", selAxis);
+        Serial.println();
         mount.gotoPosition(selAxis, false, 0x000000);
         break;
       case 'g':
-        Serial.println("Get Selected Axis Position");
+        Serial.printf("Axis %x Position = ", selAxis);
         mount.getPosition(selAxis, &position[selAxis & 1]);
         Serial.printf("Pos=%d", position[selAxis & 1]);
         Serial.println();
         break;
       case 'v':
-        Serial.println("Get Firmware Version");
+        Serial.print("Firmware Version = ");
         mount.getVersion(selAxis, &ver[0],&ver[1]);
-        Serial.printf("Firmware ver %d.%d", ver[0], ver[1]);  
+        Serial.printf("%d.%d", ver[0], ver[1]);  
         Serial.println();
         break;
       case '?':
