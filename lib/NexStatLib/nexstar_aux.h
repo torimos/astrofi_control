@@ -14,7 +14,7 @@
 #define _nexstar_aux_h_
 
 #include "nexstar_base.h"
-
+#include "nexstar_msg_reciever.h"
 
 class NexStarAux : public NexStarBase {
 public:
@@ -35,7 +35,7 @@ public:
     int setApproach(uint8_t dest, bool dir);
     int getApproach(uint8_t dest, bool *dir);
 
-    void run() {};
+    void run();
 protected:
     int sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data,
             NexStarMessage *resp);
@@ -46,6 +46,10 @@ private:
 
     int select_in_pin;
     int select_out_pin;
+    bool send_mode = false;
+
+    NexStarMessage last_resp;
+    NexstarMessageReceiver msg_receiver;
 };
 
 #endif

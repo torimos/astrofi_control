@@ -1,7 +1,16 @@
 #include <Arduino.h>
 #include "nexstar_aux.h"
 
-NexStarAux mount(22,23);
+#define SEL_IN  22
+#define SEL_OUT 23
+// SEL/RTS              - GRAY  / GRAY
+// GND                  - RED   / BLACK
+// SER1 (from DEVICE)   - YELOW / ORANGE
+// 12V                  - GREEN / BLUE
+// SER2 (from MAIN/INT) - BROWN / BROWN
+// NC/CTS               - WHITE / WHITE
+
+NexStarAux mount(SEL_IN,SEL_OUT);
 
 uint8_t   maxSpd = 0x09;
 uint8_t   stopSpd = 0x00;
@@ -15,29 +24,11 @@ uint8_t   selAxis = DEV_ALT;
 void setup() {
   mount.init();
   Serial.begin(115200);
-}
-void receive() {
-  if (Serial2.available())
-  {
-  #if DEBUG
-  Serial.print("<< ");
-  #endif
-    while (Serial2.available()) {
-      unsigned char cc = Serial2.read();
-  #if DEBUG
-      if (cc < 0x10)
-        Serial.print('0');
-      Serial.print(cc, 16);
-      Serial.print(' ');
-  #endif
-    }
-  #if DEBUG
-    Serial.println();
-  #endif
-  }
+  Serial.println("Ready");
 }
 void loop() {
-  receive();
+  mount.run();
+
   if (Serial.available()) {
     unsigned char cc = Serial.read();
     switch (cc) {
@@ -118,4 +109,7 @@ void loop() {
     // Delay before processing next command to avoid overrun
     delay(20);
   }
+
+   if(!Ps3.isConnected())
+        return;
 }

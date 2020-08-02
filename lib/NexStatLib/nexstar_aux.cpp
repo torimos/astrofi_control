@@ -59,7 +59,7 @@ int NexStarAux::newMessage(NexStarMessage *msg, uint8_t dest, uint8_t id, uint8_
     if (size > MAX_PAYLOAD_SIZE) {
         return ERR_INVALID;
     }
-    msg->header.preamble = 0x3b;
+    msg->header.preamble = MSG_PREAMBLE;
     msg->header.length = size + 3;
     msg->header.source = DEV_HC;
     msg->header.dest = dest;
@@ -85,7 +85,7 @@ int NexStarAux::sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data,
     Serial.println();
     Serial.print(">> ");
 #endif
-
+    send_mode = true;
     digitalWrite(select_out_pin, LOW); // send_mode
     delayMicroseconds(50);
     for (int i = 0; i < size + 5; i++) {
@@ -102,7 +102,8 @@ int NexStarAux::sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data,
     Serial.print(msg.crc, 16);  Serial.print(' ');
 #endif
     digitalWrite(select_out_pin, HIGH); // receive_mode
-    
+    send_mode = false;
+/*
     long int t0 = millis();
     while (digitalRead(select_in_pin) == LOW){
         delayMicroseconds(5);
@@ -164,7 +165,7 @@ int NexStarAux::sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data,
     if (calcCRC(resp) != resp->crc) {
         Serial.println("ERR_CRC in last command");
         return ERR_CRC;
-    }
+    }*/
     return 0;
 }
 
@@ -245,4 +246,84 @@ int NexStarAux::getVersion(uint8_t dest, char *major, char *minor)
     *major = resp.payload[0];
     *minor = resp.payload[1];
     return ret;
+}
+
+char nbuffer[128];
+const char* cmdName(int cmd)
+{
+    const char *name = NULL;
+    switch (cmd)
+    {
+        case MC_GET_POSITION: name = "GET_POSITION"; break;
+        case MC_GOTO_FAST: name = "GOTO_FAST"; break;
+        case MC_SET_POSITION: name = "SET_POSITION"; break;
+        case MC_SET_POS_GUIDERATE: name = "SET_POS_GUIDERATE"; break;
+        case MC_SET_NEG_GUIDERATE: name = "SET_NEG_GUIDERATE"; break;
+        case MC_LEVEL_START: name = "LEVEL_START"; break;
+        case MC_PEC_RECORD_START: name = "PEC_RECORD_START"; break;
+        case MC_PEC_PLAYBACK: name = "PEC_PLAYBACK"; break;
+        case MC_SET_POS_BACKLASH: name = "SET_POS_BACKLASH"; break;
+        case MC_SET_NEG_BACKLASH: name = "SET_NEG_BACKLASH"; break;
+        case MC_LEVEL_DONE: name = "LEVEL_DONE"; break;
+        case MC_SLEW_DONE: name = "SLEW_DONE"; break;
+        case MC_PEC_RECORD_DONE: name = "PEC_RECORD_DONE"; break;
+        case MC_PEC_RECORD_STOP: name = "PEC_RECORD_STOP"; break;
+        case MC_GOTO_SLOW: name = "GOTO_SLOW"; break;
+        case MC_AT_INDEX: name = "AT_INDEX"; break;
+        case MC_SEEK_INDEX: name = "SEEK_INDEX"; break;
+        case MC_MOVE_POS: name = "MOVE_POS"; break;
+        case MC_MOVE_NEG: name = "MOVE_NEG"; break;
+        case MC_MOVE_PULSE: name = "MOVE_PULSE"; break;
+        case MC_GET_PULSE_STATUS: name = "GET_PULSE_STATUS"; break;
+        case MC_ENABLE_CORDWRAP: name = "ENABLE_CORDWRAP"; break;
+        case MC_DISABLE_CORDWRAP: name = "DISABLE_CORDWRAP"; break;
+        case MC_SET_CORDWRAP_POS: name = "SET_CORDWRAP_POS"; break;
+        case MC_POLL_CORDWRAP: name = "POLL_CORDWRAP"; break;
+        case MC_GET_CORDWRAP_POS: name = "GET_CORDWRAP_POS"; break;
+        case MC_GET_POS_BACKLASH: name = "GET_POS_BACKLASH"; break;
+        case MC_GET_NEG_BACKLASH: name = "GET_NEG_BACKLASH"; break;
+        case MC_SET_AUTOGUIDE_RATE: name = "SET_AUTOGUIDE_RATE"; break;
+        case MC_GET_AUTOGUIDE_RATE: name = "GET_AUTOGUIDE_RATE"; break;
+        case MC_PROGRAM_ENTER: name = "PROGRAM_ENTER"; break;
+        case MC_PROGRAM_INIT: name = "PROGRAM_INIT"; break;
+        case MC_PROGRAM_DATA: name = "PROGRAM_DATA"; break;
+        case MC_PROGRAM_END: name = "PROGRAM_END"; break;
+        case MC_GET_APPROACH: name = "GET_APPROACH"; break;
+        case MC_SET_APPROACH: name = "SET_APPROACH"; break;
+        case MC_GET_VER: name = "GET_VER"; break;
+    }
+    if (name != NULL)
+    {
+        sprintf(nbuffer, "%s(0x%X)", name, cmd);
+    }
+    else
+    {
+        sprintf(nbuffer, "??(0x%X)", cmd);
+    }
+    
+    return nbuffer;
+}
+
+void NexStarAux::run(){
+    if (!send_mode)
+    {
+        if (serialAvailable()) {
+            unsigned char cc = serialRead();
+            if (msg_receiver.process(cc))
+            {
+                NexStarMessage* msg = msg_receiver.getMessage();
+                const char *dir = (msg->header.source == DEV_APP || msg->header.source == DEV_HC) ?  ">>" : "<<";
+                Serial.printf("CMD: %s [%X %s %X] sz=%d: ",cmdName(msg->header.id), msg->header.source, dir, msg->header.dest, msg->header.length);
+                for (int ii = 0; ii < msg->header.length; ii++) {
+                    unsigned char cc =msg->payload[ii];
+                    if (cc < 0x10) Serial.print('0');
+                    Serial.print(cc, 16);
+                    Serial.print(' ');
+                }
+                if (msg->header.length>0) {
+                    Serial.println();
+                }
+            }
+        }
+    }
 }

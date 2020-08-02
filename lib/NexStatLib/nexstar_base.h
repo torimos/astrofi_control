@@ -79,6 +79,7 @@
 #define MC_SET_APPROACH         0xfd
 #define MC_GET_VER              0xfe
 
+#define MSG_PREAMBLE             0x3b
 
 #define RTS_NOT_HIGH            -1
 #define RTS_NOT_LOW             -2
