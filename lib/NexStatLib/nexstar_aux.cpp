@@ -103,69 +103,6 @@ int NexStarAux::sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data,
 #endif
     digitalWrite(select_out_pin, HIGH); // receive_mode
     send_mode = false;
-/*
-    long int t0 = millis();
-    while (digitalRead(select_in_pin) == LOW){
-        delayMicroseconds(5);
-        if (millis() - t0 > RESP_TIMEOUT) {
-            Serial.println("ERR_TIMEOUT in last command");
-            return ERR_TIMEOUT;
-        }
-    }
-    t0 = millis();
-    while (true) {
-        if (digitalRead(select_in_pin) == LOW)
-            break;
-        delayMicroseconds(50);
-        if (millis() - t0 > RESP_TIMEOUT) {
-            Serial.println("ERR_TIMEOUT in last command");
-            return ERR_TIMEOUT;
-        }
-    }
-
-    unsigned int pos = 0;
-    bytes = (char*)(resp);
-    t0 = millis();
-    while (true) {
-        delayMicroseconds(50);
-        if (serialAvailable()) {
-            unsigned char cc = serialRead();
-            bytes[pos++] = cc;
-        }
-        if (pos>4) {
-            int sz = bytes[1];
-            if (sz == (pos-3)) break;
-        }
-        if (millis() - t0 > RESP_TIMEOUT) {
-            Serial.println("ERR_TIMEOUT in last command");
-            return ERR_TIMEOUT;
-        }
-    }
-
-#if DEBUG
-    Serial.println();
-    Serial.print("<< ");
-    for (int ii = 0; ii < pos; ii++) {
-        unsigned char cc =bytes[ii];
-        if (cc < 0x10)
-            Serial.print('0');
-        Serial.print(cc, 16);
-        Serial.print(' ');
-    }
-    if (pos>0)
-      Serial.println();
-    Serial.printf("[%d] sendCommand(end)", millis());
-    Serial.println();
-#endif
-    if (pos <= sizeof(NexStarHeader)) {
-        Serial.println("ERR_BAD_SIZE in last command");
-        return ERR_BAD_SIZE;
-    }
-    resp->crc = bytes[resp->header.length + 2];
-    if (calcCRC(resp) != resp->crc) {
-        Serial.println("ERR_CRC in last command");
-        return ERR_CRC;
-    }*/
     return 0;
 }
 

@@ -26,6 +26,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Ready");
 }
+
 void loop() {
   mount.run();
 
@@ -70,14 +71,16 @@ void loop() {
         mount.move(selAxis, true, maxSpd);
         break;
       case 'z':
-        Serial.printf("Rotate %x in negative direction by 0x100000 (1/16 of a revolution)", selAxis);
+        position[selAxis & 1] = (position[selAxis & 1] - 0x100000) & 0xFFFFFFF;
+        Serial.printf("Rotate %x in negative direction by 0x100000 (1/16 of a revolution) to %x", selAxis, position[selAxis & 1]);
         Serial.println();
-        mount.gotoPosition(selAxis, true, position[selAxis & 1] = (position[selAxis & 1] - 0x100000) & 0xFFFFFF);
+        mount.gotoPosition(selAxis, true, position[selAxis & 1]);
         break;
       case 'a':
-        Serial.printf("Rotate %x in positive direction by 0x100000 (1/16 of a revolution)", selAxis);
+        position[selAxis & 1] = (position[selAxis & 1] + 0x100000) & 0xFFFFFFF;
+        Serial.printf("Rotate %x in positive direction by 0x100000 (1/16 of a revolution) to %x", selAxis, position[selAxis & 1]);
         Serial.println();
-        mount.gotoPosition(selAxis, true, position[selAxis & 1] = (position[selAxis & 1] + 0x100000) & 0xFFFFFF);
+        mount.gotoPosition(selAxis, true, position[selAxis & 1]);
         break;
       case 's':
         Serial.printf("Set %x Axis current position to 0x000000", selAxis);
@@ -109,7 +112,4 @@ void loop() {
     // Delay before processing next command to avoid overrun
     delay(20);
   }
-
-   if(!Ps3.isConnected())
-        return;
 }
