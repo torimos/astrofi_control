@@ -16,6 +16,8 @@
 #define overlap(amt,low,high) ((amt < low) ? high : (( amt > high) ? low : amt))
 #define invert(cond, val) ((cond) ? (val) : !(val))
 
+TaskHandle_t mountTask;
+
 App::App(){
     mount = new NexStarAux(27, 4);
     ui = new UserInterface();
@@ -23,7 +25,7 @@ App::App(){
     prefs = new Preferences();
 }
 App::~App() {
-    delete mount;
+    //delete mount;
     delete ui;
     delete input;
     delete prefs;
@@ -31,6 +33,16 @@ App::~App() {
     ui = NULL;
     input = NULL;
     prefs = NULL;
+}
+
+void MountTask( void * pvParameters ){
+  Serial.print("MountTask running on core ");
+  Serial.println(xPortGetCoreID());
+  NexStarAux* mount = (NexStarAux*)pvParameters;
+  while(1){
+    mount->run();
+    delay(1);
+  }
 }
 
 void App::init()
@@ -47,15 +59,27 @@ void App::init()
         settings.dirALT = false;
         settings.dirAZM = false;
     }
+
     mount->setPosition(DEV_AZ, 0);
     mount->setPosition(DEV_ALT, 0);
     mount->move(DEV_AZ, true, 0);
     mount->move(DEV_ALT, true, 0);
-}
 
+    model.positionALT = model.positionAZM = 0;
+
+    xTaskCreatePinnedToCore(
+                MountTask,   /* Task function. */
+                "MountTask",     /* name of task. */
+                10000,       /* Stack size of task */
+                mount,        /* parameter of the task */
+                1,           /* priority of the task */
+                &mountTask,      /* Task handle to keep track of created task */
+                0);          /* pin task to core 0 */   
+                
+    stopWatch = millis();
+}
 void App::run()
 {
-    mount->run();
     model.input = input->get();
 
     if (model.input.released & InputReleased::Button)
@@ -130,8 +154,34 @@ void App::processCtrl()
             mount->move(DEV_ALT, invert(settings.dirALT, model.input.y < 0), settings.speed > 0 ? settings.speed : ay);
         }
     }
-    mount->sendCommand(DEV_AZ, MC_GET_POSITION);
-    mount->sendCommand(DEV_ALT, MC_GET_POSITION);
+
+    if (model.input.ccAvailable)
+    {
+        switch (model.input.cc) {
+            case 'q':
+                Serial.println("Stop Axis");
+                mount->move(DEV_ALT, true, 0);
+                delay(50);
+                mount->move(DEV_AZ, true, 0);
+                break;
+            break;
+            case '?':
+                Serial.println("OK");
+            break;
+        }
+    }
+
+    if ((millis()-stopWatch) > 500)
+    {
+        mount->requestPosition(DEV_ALT);
+        delay(25);
+        mount->requestPosition(DEV_AZ);
+        stopWatch=millis();
+    }
+
+    model.positionALT = mount->getPosition(DEV_ALT);
+    model.positionAZM = mount->getPosition(DEV_AZ);
+
     delay(20);
 }
 
@@ -157,95 +207,3 @@ bool App::loadSettings()
     }
     return false;
 }
-// uint8_t   maxSpd = 0x09;
-// uint8_t   stopSpd = 0x00;
-
-// uint32_t  position[2];
-// bool  dir[2];
-// bool  moving[2];
-// char ver[2];
-// uint8_t   selAxis;// = DEV_ALT;
-
-// bool menu = false;
-// bool running = true;
-// if (input.ccAvailable) {
-//     switch (input.cc) {
-//     case '1':
-//     case '2':
-//     case '3':
-//     case '4':
-//     case '5':
-//     case '6':
-//     case '7':
-//     case '8':
-//     case '9':
-//     case '0':
-//         maxSpd = input.cc - (unsigned char)'0';
-//         Serial.printf("Rate set to %d", maxSpd);
-//         Serial.println();
-//         break;
-//     case '[':
-//         selAxis = DEV_ALT;
-//         Serial.println("ALT axis selected");
-//         break;
-//     case ']':
-//         selAxis = DEV_AZ;
-//         Serial.println("AZM axis selected");
-//         break;
-//     case 'q':
-//         Serial.printf("Stop Slew of %x Axis", selAxis);
-//         Serial.println();
-//         mount.move(selAxis, true, 0);
-//         break;
-//     case 'c':
-//         Serial.printf("Slew %x Axis in negative direction", selAxis);
-//         Serial.println();
-//         mount.move(selAxis, false, maxSpd);
-//         break;
-//     case 'd':
-//         Serial.printf("Slew %x Axis in positive direction", selAxis);
-//         Serial.println();
-//         mount.move(selAxis, true, maxSpd);
-//         break;
-//     case 'z':
-//         position[selAxis & 1] = (position[selAxis & 1] - 0x100000) & 0xFFFFFFF;
-//         Serial.printf("Rotate %x in negative direction by 0x100000 (1/16 of a revolution) to %x", selAxis, position[selAxis & 1]);
-//         Serial.println();
-//         mount.gotoPosition(selAxis, true, position[selAxis & 1]);
-//         break;
-//     case 'a':
-//         position[selAxis & 1] = (position[selAxis & 1] + 0x100000) & 0xFFFFFFF;
-//         Serial.printf("Rotate %x in positive direction by 0x100000 (1/16 of a revolution) to %x", selAxis, position[selAxis & 1]);
-//         Serial.println();
-//         mount.gotoPosition(selAxis, true, position[selAxis & 1]);
-//         break;
-//     case 's':
-//         Serial.printf("Set %x Axis current position to 0x000000", selAxis);
-//         Serial.println();
-//         mount.setPosition(selAxis, 0x000000);
-//         position[selAxis & 1] = 0x000000;
-//         break;
-//     case 'x':
-//         Serial.printf("Move %x Axis to position 0x000000", selAxis);
-//         Serial.println();
-//         mount.gotoPosition(selAxis, false, 0x000000);
-//         break;
-//     case 'g':
-//         Serial.printf("Axis %x Position = ", selAxis);
-//         mount.getPosition(selAxis, &position[selAxis & 1]);
-//         Serial.printf("Pos=%d", position[selAxis & 1]);
-//         Serial.println();
-//         break;
-//     case 'v':
-//         Serial.print("Firmware Version = ");
-//         mount.getVersion(selAxis, &ver[0],&ver[1]);
-//         Serial.printf("%d.%d", ver[0], ver[1]);  
-//         Serial.println();
-//         break;
-//     case '?':
-//         Serial.println("OK");
-//         break;
-//     }
-//     // Delay before processing next command to avoid overrun
-//     delay(20);
-// }

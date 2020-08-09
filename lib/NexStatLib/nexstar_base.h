@@ -111,7 +111,8 @@ protected:
 
 public:
     virtual int setPosition(uint8_t dest, uint32_t pos);
-    virtual int getPosition(uint8_t dest, uint32_t *pos);
+    virtual int requestPosition(uint8_t dest);
+    virtual uint32_t getPosition(uint8_t dest);
     virtual int gotoPosition(uint8_t dest, bool slow, uint32_t pos);
     virtual int move(uint8_t dest, bool dir, uint8_t rate);
     virtual int slewDone(uint8_t dest, bool *done);

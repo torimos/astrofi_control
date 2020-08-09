@@ -43,6 +43,9 @@ NexStarAux::NexStarAux(int select_in, int select_out)
 // Initialize pins and setup serial port
 int NexStarAux::init()
 {
+    position[0] = position[1] = 0;
+    last_pos_time[0] = last_pos_time[1] = 0;
+    
     pinMode(select_out_pin, OUTPUT);
     digitalWrite(select_out_pin, HIGH);
     pinMode(select_in_pin, INPUT);
@@ -120,17 +123,23 @@ int NexStarAux::sendCommand(uint8_t dest, uint8_t id)
 int NexStarAux::setPosition(uint8_t dest, uint32_t pos)
 {
     NexStarMessage resp;
+    position[dest == DEV_AZ ? 0 : 1] = pos;
     char payload[3];
     uint32To24bits(pos, payload);
     return sendCommand(dest, MC_SET_POSITION, 3, payload, &resp);
 }
 
-int NexStarAux::getPosition(uint8_t dest, uint32_t *pos)
+int NexStarAux::requestPosition(uint8_t dest)
 {
-    NexStarMessage resp;
-    int ret = sendCommand(dest, MC_GET_POSITION, 0, NULL, &resp);
-    //*pos = uint32From24bits(resp.payload);
-    return ret;
+    if ((millis() - last_pos_time[dest == DEV_AZ ? 0 : 1]) >= 500)
+        return sendCommand(dest, MC_GET_POSITION);
+    else
+        return -1000;
+}
+
+uint32_t NexStarAux::getPosition(uint8_t dest)
+{
+    return position[dest == DEV_AZ ? 0 : 1];
 }
 
 int NexStarAux::gotoPosition(uint8_t dest, bool slow, uint32_t pos)
@@ -260,8 +269,18 @@ void NexStarAux::run(){
             if (msg_receiver.process(cc))
             {
                 NexStarMessage* msg = msg_receiver.getMessage();
-                const char *dir = (msg->header.source == DEV_APP || msg->header.source == DEV_HC) ?  ">>" : "<<";
-                Serial.printf("CMD: %s [%X %s %X] sz=%d: ",cmdName(msg->header.id), msg->header.source, dir, msg->header.dest, msg->header.length);
+                switch (msg->header.id)
+                {
+                case MC_GET_POSITION:
+                    if (msg->header.source == DEV_AZ || msg->header.source == DEV_ALT)
+                    {
+                        position[msg->header.source == DEV_AZ ? 0 : 1] = msg->payload[0]<<16 | msg->payload[1]<<8 | msg->payload[2];
+                        last_pos_time[msg->header.source == DEV_AZ ? 0 : 1] = millis();
+                    }
+                    break;
+                }
+
+                Serial.printf("[%d] CMD: %s [%X >> %X] sz=%d: ", millis(), cmdName(msg->header.id), msg->header.source, msg->header.dest, msg->header.length);
                 for (int ii = 0; ii < msg->header.length; ii++) {
                     unsigned char cc =msg->payload[ii];
                     if (cc < 0x10) Serial.print('0');

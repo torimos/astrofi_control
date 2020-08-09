@@ -22,7 +22,8 @@ public:
     int init();
 
     int setPosition(uint8_t dest, uint32_t pos);
-    int getPosition(uint8_t dest, uint32_t *pos);
+    uint32_t getPosition(uint8_t dest);
+    int requestPosition(uint8_t dest);
 
     int gotoPosition(uint8_t dest, bool slow, uint32_t pos);
     int move(uint8_t dest, bool dir, uint8_t rate);
@@ -39,6 +40,7 @@ public:
 
     int sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data);
     int sendCommand(uint8_t dest, uint8_t id);
+
 protected:
     int sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data,
             NexStarMessage *resp);
@@ -53,6 +55,8 @@ private:
 
     NexStarMessage last_resp;
     NexstarMessageReceiver msg_receiver;
+    uint32_t position[2];
+    unsigned long last_pos_time[2];
 };
 
 #endif

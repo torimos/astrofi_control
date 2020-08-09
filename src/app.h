@@ -22,6 +22,7 @@ public:
 private:
     Model model;
     ControlSettings settings;
+    unsigned long stopWatch;
     void processMenu();
     void processCtrl();
     bool saveSettings();

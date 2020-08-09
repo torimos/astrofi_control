@@ -17,7 +17,7 @@ void UserInterface::init()
     Serial.println(F("SSD1306 allocation failed"));
     for(;;);
   }
-  lcd->setTextSize(2);
+  lcd->setTextSize(1);
   lcd->setTextColor(SSD1306_WHITE, SSD1306_BLACK);
   lcd->clearDisplay();
   lcd->display();
@@ -30,8 +30,6 @@ void UserInterface::draw(Model model, ControlSettings settings)
 
   if (model.mode == ModeType::MENU)
   {
-    lcd->setTextSize(1);
-
     lcd->printf("%sSpeed:", model.menu.idx == 0 ? ">" : " ");
     if (settings.speed > 0) {
       lcd->printf("%d", settings.speed);lcd->println();
@@ -47,7 +45,6 @@ void UserInterface::draw(Model model, ControlSettings settings)
   }
   else
   {
-    lcd->setTextSize(2);
     lcd->printf("X:%3d", model.input.x);lcd->println();
     lcd->printf("Y:%3d", model.input.y);lcd->println();
     lcd->print("Speed:");
@@ -57,6 +54,16 @@ void UserInterface::draw(Model model, ControlSettings settings)
     else {
       lcd->println("auto");
     }
+    double azm = model.positionAZM * 360.0 / (double)0x1000000;
+    int degAZM = int(azm);
+    int minAZM = int((azm - degAZM) * 60);
+    double secAZM = (azm - degAZM  - minAZM / 60.0) * 3600;
+    double alt = model.positionALT * 360.0 / (double)0x1000000;
+    int degALT = int(alt);
+    int minALT = int((alt - degALT) * 60);
+    double secALT = (alt - degALT  - minALT / 60.0) * 3600;
+    lcd->printf("AZM:%3d %2d' %2.1f\"", degAZM, minAZM, secAZM);lcd->println();
+    lcd->printf("ALT:%3d %2d' %2.1f\"", degALT, minALT, secALT);lcd->println();
   }
 
   lcd->display();

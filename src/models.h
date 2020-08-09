@@ -43,4 +43,7 @@ struct Model
     InputState input;
     ModeType mode;
     MenuModel menu;
+
+    uint32_t positionAZM;
+    uint32_t positionALT;
 };
