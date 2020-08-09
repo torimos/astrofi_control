@@ -12,7 +12,7 @@ public:
 private:
   int x_pin;
   int y_pin;
-  InputState _inputState, _prevInputState;
+  InputState _prevInputState;
   
   int map_pos(int v);
 };

@@ -18,5 +18,6 @@ public:
     void run();
 private:
     Model model;
-    void process();
+    void processMenu();
+    void processCtrl();
 };

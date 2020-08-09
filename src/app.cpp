@@ -7,6 +7,11 @@
 // SER2 (from MAIN/INT) - BROWN / BROWN
 // NC/CTS               - WHITE / WHITE
 
+#define MENU_ITEM_COUNT     3
+#define MENU_ITEM_SPEED     0
+#define MENU_ITEM_INV_AZM   1
+#define MENU_ITEM_INV_ALT   2
+
 App::App(){
     mount = new NexStarAux(27, 4);
     ui = new UserInterface();
@@ -20,63 +25,79 @@ void App::init()
     mount->init();
 
     model.mode = ModeType::CONTROL;
+    model.menu.idx = 0;
+    
     model.speed = -1;
-    model.menu_hdir = 0;
+    model.invALT = model.invAZM = false;
 }
 
 void App::run()
 {
+    mount->run();
     model.input = input->get();
-    process();
+
+    if (model.input.released & InputReleased::Button)
+    {
+        model.mode = model.mode == ModeType::MENU ? ModeType::CONTROL : ModeType::MENU;
+        model.menu.idx = 0;
+    }
+    switch (model.mode)
+    {
+    case ModeType::MENU:
+        processMenu();
+        break;
+    case ModeType::CONTROL:
+        processCtrl();
+        break;
+    }
+    
     ui->draw(model);
 }
 
-void App::process()
-{
-    mount->run();
-    if (model.input.b_released)
+void App::processMenu()
+{ 
+    if (model.input.released)
     {
-        model.mode = model.mode == ModeType::MENU ? ModeType::CONTROL : ModeType::MENU;
-    }
-    if (model.mode == ModeType::MENU)
-    {
-        if ((model.input.x == 0 && model.input.y == 0 && model.running))
+        switch (model.menu.idx)
         {
-            model.speed+=model.menu_hdir;
-            if (model.speed < -1) model.speed = -1;
-            else if (model.speed > 9) model.speed = 9;
-
-            model.running = false;
+        case MENU_ITEM_SPEED:
+            {
+                if (model.input.released == InputReleased::LeftStick) model.speed--;
+                else if (model.input.released == InputReleased::RightStick) model.speed++;
+                if (model.speed < 0) model.speed = 0;
+                else if (model.speed > 9) model.speed = 9;
+            }
+            break;
         }
-        else if (model.input.x != 0 || model.input.y != 0)
-        {
-            model.menu_hdir = model.input.x < 0 ? -1 : (model.input.x > 0 ? 1 : 0);
-            model.menu_vdir = model.input.y < 0 ? -1 : (model.input.y > 0 ? 1 : 0);
-            model.running = true;
-        }
-    }
-    else 
-    {
-        if ((model.input.x == 0 && model.input.y == 0 && model.running))
-        {
-            mount->move(DEV_AZ, true, 0);
-            mount->move(DEV_ALT, true, 0);
-            model.running = false;
-        }
-        else if (model.input.x != 0 || model.input.y != 0)
-        {
-            int ax = abs(model.input.x);
-            int ay = abs(model.input.y);
-            if (model.speed<0 || ax>0)
-                mount->move(DEV_AZ, model.input.x > 0, model.speed > 0 ? model.speed : ax);
-            if (model.speed<0 || ay>0)
-                mount->move(DEV_ALT, model.input.y < 0, model.speed > 0 ? model.speed : ay);
-            model.running = true;
-        }
-        delay(20);
+        if (model.input.released == InputReleased::UpStick) model.menu.idx--;
+        else if (model.input.released == InputReleased::DownStick) model.menu.idx++;
+        if ( model.menu.idx < 0) model.menu.idx = MENU_ITEM_COUNT - 1;
+        else if ( model.menu.idx >= MENU_ITEM_COUNT) model.menu.idx = 0;
     }
 }
 
+void App::processCtrl()
+{
+    if (model.input.released)
+    {
+        mount->move(DEV_AZ, true, 0);
+        mount->move(DEV_ALT, true, 0);
+    }
+    else if (model.input.x != 0 || model.input.y != 0)
+    {
+        int ax = abs(model.input.x);
+        int ay = abs(model.input.y);
+        if (model.speed == 0 || ax > 0)
+        {
+            mount->move(DEV_AZ, model.input.x > 0, model.speed > 0 ? model.speed : ax);
+        }
+        if (model.speed == 0 || ay > 0)
+        {
+            mount->move(DEV_ALT, model.input.y < 0, model.speed > 0 ? model.speed : ay);
+        }
+    }
+    delay(20);
+}
 
 
 // uint8_t   maxSpd = 0x09;

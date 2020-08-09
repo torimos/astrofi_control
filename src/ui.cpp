@@ -26,19 +26,32 @@ void UserInterface::draw(Model model)
 
   if (model.mode == ModeType::MENU)
   {
-    lcd->println("MENU:");
-    lcd->printf("%s Speed: %d", ">", model.speed); 
+    lcd->setTextSize(1);
+
+    lcd->printf("%sSpeed:", model.menu.idx == 0 ? ">" : " ");
+    if (model.speed > 0) {
+      lcd->printf("%d", model.speed);lcd->println();
+    }
+    else {
+      lcd->println("auto");
+    }
+    
+    lcd->printf("%sInv AZM:%s", model.menu.idx == 1 ? ">" : " ", model.invAZM ? "yes" : " no");lcd->println();
+    lcd->printf("%sInv ALT:%s", model.menu.idx == 2 ? ">" : " ", model.invALT ? "yes" : " no");lcd->println();
     lcd->println();
+    lcd->printf("X:%3d - Y:%3d", model.input.x, model.input.y);lcd->println();
   }
   else
   {
-    lcd->printf("X: %4d", model.input.x);
-    lcd->println();
-    lcd->printf("Y: %4d", model.input.y); 
-    lcd->println();
-    if (model.speed>=0) {
-      lcd->printf("Speed: %d", model.speed); 
-      lcd->println();
+    lcd->setTextSize(2);
+    lcd->printf("X:%3d", model.input.x);lcd->println();
+    lcd->printf("Y:%3d", model.input.y);lcd->println();
+    lcd->print("Speed:");
+    if (model.speed > 0) {
+      lcd->printf("%d", model.speed);lcd->println();
+    }
+    else {
+      lcd->println("auto");
     }
   }
 
