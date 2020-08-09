@@ -12,6 +12,9 @@
 #define MENU_ITEM_INV_AZM   1
 #define MENU_ITEM_INV_ALT   2
 
+
+#define overlap(amt,low,high) ((amt)<(low)?(high):((amt)>(high)?(low):(amt)))
+
 App::App(){
     mount = new NexStarAux(27, 4);
     ui = new UserInterface();
@@ -64,15 +67,13 @@ void App::processMenu()
             {
                 if (model.input.released == InputReleased::LeftStick) model.speed--;
                 else if (model.input.released == InputReleased::RightStick) model.speed++;
-                if (model.speed < 0) model.speed = 0;
-                else if (model.speed > 9) model.speed = 9;
+                constrain(model.speed, 0, 9);
             }
             break;
         }
         if (model.input.released == InputReleased::UpStick) model.menu.idx--;
         else if (model.input.released == InputReleased::DownStick) model.menu.idx++;
-        if ( model.menu.idx < 0) model.menu.idx = MENU_ITEM_COUNT - 1;
-        else if ( model.menu.idx >= MENU_ITEM_COUNT) model.menu.idx = 0;
+        overlap(model.menu.idx, 0, MENU_ITEM_COUNT - 1);
     }
 }
 
