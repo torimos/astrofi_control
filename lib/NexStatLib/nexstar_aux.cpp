@@ -108,7 +108,8 @@ int NexStarAux::sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data,
 
 int NexStarAux::sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data)
 {
-    return sendCommand(dest, id, size, data);
+    NexStarMessage resp;
+    return sendCommand(dest, id, size, data, &resp);
 }
 
 int NexStarAux::sendCommand(uint8_t dest, uint8_t id)
@@ -128,7 +129,7 @@ int NexStarAux::getPosition(uint8_t dest, uint32_t *pos)
 {
     NexStarMessage resp;
     int ret = sendCommand(dest, MC_GET_POSITION, 0, NULL, &resp);
-    *pos = uint32From24bits(resp.payload);
+    //*pos = uint32From24bits(resp.payload);
     return ret;
 }
 

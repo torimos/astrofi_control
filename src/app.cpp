@@ -14,6 +14,7 @@
 
 
 #define overlap(amt,low,high) ((amt < low) ? high : (( amt > high) ? low : amt))
+#define invert(cond, val) ((cond) ? (val) : !(val))
 
 App::App(){
     mount = new NexStarAux(27, 4);
@@ -46,8 +47,10 @@ void App::init()
         settings.dirALT = false;
         settings.dirAZM = false;
     }
-    // mount->setApproach(DEV_AZ, settings.dirAZM);
-    // mount->setApproach(DEV_ALT, settings.dirALT);
+    mount->setPosition(DEV_AZ, 0);
+    mount->setPosition(DEV_ALT, 0);
+    mount->move(DEV_AZ, true, 0);
+    mount->move(DEV_ALT, true, 0);
 }
 
 void App::run()
@@ -60,8 +63,6 @@ void App::run()
         if (model.mode == ModeType::MENU)
         {
             saveSettings();
-            // mount->setApproach(DEV_AZ, settings.dirAZM);
-            // mount->setApproach(DEV_ALT, settings.dirALT);
         }
         model.mode = model.mode == ModeType::MENU ? ModeType::CONTROL : ModeType::MENU;
         model.menu.idx = 0;
@@ -93,10 +94,10 @@ void App::processMenu()
             }
             break;
         case MENU_ITEM_INV_ALT:
-               settings.dirALT = !settings.dirALT;
+               settings.dirALT = (model.input.x<0) ? false : ((model.input.x>0) ? true : settings.dirALT);
             break;
         case MENU_ITEM_INV_AZM:
-               settings.dirAZM = !settings.dirAZM;
+               settings.dirAZM = (model.input.x<0) ? false : ((model.input.x>0) ? true : settings.dirAZM);
             break;
         }
         delay(200);
@@ -122,15 +123,15 @@ void App::processCtrl()
         int ay = abs(model.input.y);
         if (settings.speed == 0 || ax > 0)
         {
-            mount->move(DEV_AZ, model.input.x > 0, settings.speed > 0 ? settings.speed : ax);
+            mount->move(DEV_AZ, invert(settings.dirAZM, model.input.x > 0), settings.speed > 0 ? settings.speed : ax);
         }
         if (settings.speed == 0 || ay > 0)
         {
-            mount->move(DEV_ALT, model.input.y < 0, settings.speed > 0 ? settings.speed : ay);
+            mount->move(DEV_ALT, invert(settings.dirALT, model.input.y < 0), settings.speed > 0 ? settings.speed : ay);
         }
     }
-    // mount->sendCommand(DEV_AZ, MC_GET_POSITION);
-    // mount->sendCommand(DEV_ALT, MC_GET_POSITION);
+    mount->sendCommand(DEV_AZ, MC_GET_POSITION);
+    mount->sendCommand(DEV_ALT, MC_GET_POSITION);
     delay(20);
 }
 
