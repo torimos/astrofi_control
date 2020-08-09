@@ -40,8 +40,8 @@ void UserInterface::draw(Model model, ControlSettings settings)
       lcd->println("auto");
     }
     
-    lcd->printf("%sInv AZM:%s", model.menu.idx == 1 ? ">" : " ", settings.invAZM ? "yes" : " no");lcd->println();
-    lcd->printf("%sInv ALT:%s", model.menu.idx == 2 ? ">" : " ", settings.invALT ? "yes" : " no");lcd->println();
+    lcd->printf("%sAZM:%s", model.menu.idx == 1 ? ">" : " ", settings.dirAZM ? "+" : "-");lcd->println();
+    lcd->printf("%sALT:%s", model.menu.idx == 2 ? ">" : " ", settings.dirALT ? "+" : "-");lcd->println();
     lcd->println();
     lcd->printf("X:%3d - Y:%3d", model.input.x, model.input.y);lcd->println();
   }
@@ -51,8 +51,8 @@ void UserInterface::draw(Model model, ControlSettings settings)
     lcd->printf("X:%3d", model.input.x);lcd->println();
     lcd->printf("Y:%3d", model.input.y);lcd->println();
     lcd->print("Speed:");
-    if (model.speed > 0) {
-      lcd->printf("%d", model.speed);lcd->println();
+    if (settings.speed > 0) {
+      lcd->printf("%d", settings.speed);lcd->println();
     }
     else {
       lcd->println("auto");

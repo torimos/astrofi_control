@@ -36,6 +36,9 @@ public:
     int getApproach(uint8_t dest, bool *dir);
 
     void run();
+
+    int sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data);
+    int sendCommand(uint8_t dest, uint8_t id);
 protected:
     int sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data,
             NexStarMessage *resp);

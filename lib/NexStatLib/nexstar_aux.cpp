@@ -106,6 +106,16 @@ int NexStarAux::sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data,
     return 0;
 }
 
+int NexStarAux::sendCommand(uint8_t dest, uint8_t id, uint8_t size, char* data)
+{
+    return sendCommand(dest, id, size, data);
+}
+
+int NexStarAux::sendCommand(uint8_t dest, uint8_t id)
+{
+    return sendCommand(dest, id, 0, NULL);
+}
+
 int NexStarAux::setPosition(uint8_t dest, uint32_t pos)
 {
     NexStarMessage resp;

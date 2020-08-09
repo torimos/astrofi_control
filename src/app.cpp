@@ -43,12 +43,11 @@ void App::init()
     if (!loadSettings())
     {
         settings.speed = 0;
-        settings.invALT = 0;
-        settings.invAZM = 0;
+        settings.dirALT = false;
+        settings.dirAZM = false;
     }
-    model.speed = settings.speed;
-    model.invALT = settings.invALT;
-    model.invAZM = settings.invAZM;
+    // mount->setApproach(DEV_AZ, settings.dirAZM);
+    // mount->setApproach(DEV_ALT, settings.dirALT);
 }
 
 void App::run()
@@ -61,9 +60,8 @@ void App::run()
         if (model.mode == ModeType::MENU)
         {
             saveSettings();
-            model.speed = settings.speed;
-            model.invALT = settings.invALT;
-            model.invAZM = settings.invAZM;
+            // mount->setApproach(DEV_AZ, settings.dirAZM);
+            // mount->setApproach(DEV_ALT, settings.dirALT);
         }
         model.mode = model.mode == ModeType::MENU ? ModeType::CONTROL : ModeType::MENU;
         model.menu.idx = 0;
@@ -95,10 +93,10 @@ void App::processMenu()
             }
             break;
         case MENU_ITEM_INV_ALT:
-               settings.invALT = !settings.invALT;
+               settings.dirALT = !settings.dirALT;
             break;
         case MENU_ITEM_INV_AZM:
-               settings.invAZM = !settings.invAZM;
+               settings.dirAZM = !settings.dirAZM;
             break;
         }
         delay(200);
@@ -122,15 +120,17 @@ void App::processCtrl()
     {
         int ax = abs(model.input.x);
         int ay = abs(model.input.y);
-        if (model.speed == 0 || ax > 0)
+        if (settings.speed == 0 || ax > 0)
         {
-            mount->move(DEV_AZ, model.input.x > 0, model.speed > 0 ? model.speed : ax);
+            mount->move(DEV_AZ, model.input.x > 0, settings.speed > 0 ? settings.speed : ax);
         }
-        if (model.speed == 0 || ay > 0)
+        if (settings.speed == 0 || ay > 0)
         {
-            mount->move(DEV_ALT, model.input.y < 0, model.speed > 0 ? model.speed : ay);
+            mount->move(DEV_ALT, model.input.y < 0, settings.speed > 0 ? settings.speed : ay);
         }
     }
+    // mount->sendCommand(DEV_AZ, MC_GET_POSITION);
+    // mount->sendCommand(DEV_ALT, MC_GET_POSITION);
     delay(20);
 }
 

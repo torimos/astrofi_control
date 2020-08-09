@@ -34,8 +34,8 @@ struct MenuModel
 struct ControlSettings
 {
     int speed;
-    bool invAZM;
-    bool invALT;
+    bool dirAZM;
+    bool dirALT;
 };
 
 struct Model
@@ -43,7 +43,4 @@ struct Model
     InputState input;
     ModeType mode;
     MenuModel menu;
-    int speed;
-    bool invAZM;
-    bool invALT;
 };
