@@ -7,6 +7,7 @@ class Input
 {
 public:
   Input(int xpin, int ypin);
+  ~Input();
   void init();
   InputState get();
 private:

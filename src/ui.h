@@ -11,6 +11,7 @@ private:
     Adafruit_SSD1306* lcd;
 public:
     UserInterface();
+    ~UserInterface();
     void init();
-    void draw(Model model);
+    void draw(Model model, ControlSettings settings);
 };

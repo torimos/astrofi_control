@@ -31,6 +31,13 @@ struct MenuModel
     int idx;
 };
 
+struct ControlSettings
+{
+    int speed;
+    bool invAZM;
+    bool invALT;
+};
+
 struct Model
 {
     InputState input;

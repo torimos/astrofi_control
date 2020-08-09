@@ -13,12 +13,23 @@
 #define MENU_ITEM_INV_ALT   2
 
 
-#define overlap(amt,low,high) ((amt)<(low)?(high):((amt)>(high)?(low):(amt)))
+#define overlap(amt,low,high) ((amt < low) ? high : (( amt > high) ? low : amt))
 
 App::App(){
     mount = new NexStarAux(27, 4);
     ui = new UserInterface();
     input = new Input(39, 36);
+    prefs = new Preferences();
+}
+App::~App() {
+    delete mount;
+    delete ui;
+    delete input;
+    delete prefs;
+    mount = NULL;
+    ui = NULL;
+    input = NULL;
+    prefs = NULL;
 }
 
 void App::init()
@@ -29,9 +40,15 @@ void App::init()
 
     model.mode = ModeType::CONTROL;
     model.menu.idx = 0;
-    
-    model.speed = -1;
-    model.invALT = model.invAZM = false;
+    if (!loadSettings())
+    {
+        settings.speed = 0;
+        settings.invALT = 0;
+        settings.invAZM = 0;
+    }
+    model.speed = settings.speed;
+    model.invALT = settings.invALT;
+    model.invAZM = settings.invAZM;
 }
 
 void App::run()
@@ -41,6 +58,13 @@ void App::run()
 
     if (model.input.released & InputReleased::Button)
     {
+        if (model.mode == ModeType::MENU)
+        {
+            saveSettings();
+            model.speed = settings.speed;
+            model.invALT = settings.invALT;
+            model.invAZM = settings.invAZM;
+        }
         model.mode = model.mode == ModeType::MENU ? ModeType::CONTROL : ModeType::MENU;
         model.menu.idx = 0;
     }
@@ -54,26 +78,36 @@ void App::run()
         break;
     }
     
-    ui->draw(model);
+    ui->draw(model, settings);
 }
 
 void App::processMenu()
-{ 
-    if (model.input.released)
+{
+    if (model.input.x != 0)
     {
         switch (model.menu.idx)
         {
         case MENU_ITEM_SPEED:
             {
-                if (model.input.released == InputReleased::LeftStick) model.speed--;
-                else if (model.input.released == InputReleased::RightStick) model.speed++;
-                constrain(model.speed, 0, 9);
+                if (model.input.x<0) settings.speed--;
+                else if (model.input.x>0) settings.speed++;
+                settings.speed = constrain(settings.speed, 0, 9);
             }
             break;
+        case MENU_ITEM_INV_ALT:
+               settings.invALT = !settings.invALT;
+            break;
+        case MENU_ITEM_INV_AZM:
+               settings.invAZM = !settings.invAZM;
+            break;
         }
+        delay(200);
+    } 
+    else if (model.input.released)
+    {
         if (model.input.released == InputReleased::UpStick) model.menu.idx--;
         else if (model.input.released == InputReleased::DownStick) model.menu.idx++;
-        overlap(model.menu.idx, 0, MENU_ITEM_COUNT - 1);
+        model.menu.idx = overlap(model.menu.idx, 0, MENU_ITEM_COUNT - 1);
     }
 }
 
@@ -100,7 +134,28 @@ void App::processCtrl()
     delay(20);
 }
 
+bool App::saveSettings()
+{
+    if (prefs->begin("control"))
+    {
+        prefs->putBytes("settings", (uint8_t*)&settings, sizeof(ControlSettings));
+        prefs->end();
+        return true;
+    }
+    return false;
+}
 
+bool App::loadSettings()
+{
+    if (prefs->begin("control"))
+    {
+        size_t  schLen = prefs->getBytesLength("settings");
+        prefs->getBytes("settings", (uint8_t*)&settings, schLen);
+        prefs->end();
+        return true;
+    }
+    return false;
+}
 // uint8_t   maxSpd = 0x09;
 // uint8_t   stopSpd = 0x00;
 

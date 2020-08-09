@@ -16,6 +16,9 @@ Input::Input(int xpin, int ypin)
     _prevInputState.ccAvailable = false;
     _prevInputState.cc = 0;
 }
+Input::~Input() {
+}
+
 
 void Input::init()
 {

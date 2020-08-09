@@ -6,6 +6,10 @@
 UserInterface::UserInterface() {
   lcd = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 }
+UserInterface::~UserInterface() {
+  delete lcd;
+  lcd = NULL;
+}
 
 void UserInterface::init()
 {
@@ -19,7 +23,7 @@ void UserInterface::init()
   lcd->display();
 }
 
-void UserInterface::draw(Model model)
+void UserInterface::draw(Model model, ControlSettings settings)
 {
   lcd->fillScreen(SSD1306_BLACK);
   lcd->setCursor(0,0);
@@ -29,15 +33,15 @@ void UserInterface::draw(Model model)
     lcd->setTextSize(1);
 
     lcd->printf("%sSpeed:", model.menu.idx == 0 ? ">" : " ");
-    if (model.speed > 0) {
-      lcd->printf("%d", model.speed);lcd->println();
+    if (settings.speed > 0) {
+      lcd->printf("%d", settings.speed);lcd->println();
     }
     else {
       lcd->println("auto");
     }
     
-    lcd->printf("%sInv AZM:%s", model.menu.idx == 1 ? ">" : " ", model.invAZM ? "yes" : " no");lcd->println();
-    lcd->printf("%sInv ALT:%s", model.menu.idx == 2 ? ">" : " ", model.invALT ? "yes" : " no");lcd->println();
+    lcd->printf("%sInv AZM:%s", model.menu.idx == 1 ? ">" : " ", settings.invAZM ? "yes" : " no");lcd->println();
+    lcd->printf("%sInv ALT:%s", model.menu.idx == 2 ? ">" : " ", settings.invALT ? "yes" : " no");lcd->println();
     lcd->println();
     lcd->printf("X:%3d - Y:%3d", model.input.x, model.input.y);lcd->println();
   }
