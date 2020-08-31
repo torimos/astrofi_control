@@ -1,5 +1,7 @@
 #pragma once
 
+#include "nexstar_aux.h"
+
 enum ModeType {
     MENU = 0,
     CONTROL = 1
@@ -43,7 +45,13 @@ struct Model
     InputState input;
     ModeType mode;
     MenuModel menu;
-
+    
+    bool mountReady;
     uint32_t positionAZM;
     uint32_t positionALT;
+};
+
+struct MountTaskParams {
+    NexStarAux* mount;
+    Model* model;
 };

@@ -54,16 +54,23 @@ void UserInterface::draw(Model model, ControlSettings settings)
     else {
       lcd->println("auto");
     }
-    double azm = model.positionAZM * 360.0 / (double)0x1000000;
-    int degAZM = int(azm);
-    int minAZM = int((azm - degAZM) * 60);
-    double secAZM = (azm - degAZM  - minAZM / 60.0) * 3600;
-    double alt = model.positionALT * 360.0 / (double)0x1000000;
-    int degALT = int(alt);
-    int minALT = int((alt - degALT) * 60);
-    double secALT = (alt - degALT  - minALT / 60.0) * 3600;
-    lcd->printf("AZM:%3d %2d' %2.1f\"", degAZM, minAZM, secAZM);lcd->println();
-    lcd->printf("ALT:%3d %2d' %2.1f\"", degALT, minALT, secALT);lcd->println();
+    if (model.mountReady)
+    {
+      double azm = model.positionAZM * 360.0 / (double)0x1000000;
+      int degAZM = int(azm);
+      int minAZM = int((azm - degAZM) * 60);
+      double secAZM = (azm - degAZM  - minAZM / 60.0) * 3600;
+      double alt = model.positionALT * 360.0 / (double)0x1000000;
+      int degALT = int(alt);
+      int minALT = int((alt - degALT) * 60);
+      double secALT = (alt - degALT  - minALT / 60.0) * 3600;
+      lcd->printf("AZM:%3d %2d' %2.1f\"", degAZM, minAZM, secAZM);lcd->println();
+      lcd->printf("ALT:%3d %2d' %2.1f\"", degALT, minALT, secALT);lcd->println();
+    }
+    else
+    {
+      lcd->println("Waiting for mount...");
+    }
   }
 
   lcd->display();

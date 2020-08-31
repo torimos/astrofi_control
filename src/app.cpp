@@ -19,7 +19,7 @@
 TaskHandle_t mountTask;
 
 App::App(){
-    mount = new NexStarAux(27, 4);
+    mount = new NexStarAux(27, 18);
     ui = new UserInterface();
     input = new Input(39, 36);
     prefs = new Preferences();
@@ -35,22 +35,26 @@ App::~App() {
     prefs = NULL;
 }
 
+MountTaskParams params;
 void MountTask( void * pvParameters ){
-  Serial.print("MountTask running on core ");
-  Serial.println(xPortGetCoreID());
-  NexStarAux* mount = (NexStarAux*)pvParameters;
-  while(1){
-    mount->run();
-    delay(1);
-  }
+    Serial.print("MountTask running on core ");
+    Serial.println(xPortGetCoreID());
+    MountTaskParams* params = (MountTaskParams*)pvParameters;
+    delay(5000);
+    params->mount->init();
+    params->model->mountReady = true;
+    while(1){
+        params->mount->run();
+        delay(1);
+    }
 }
 
 void App::init()
 {
     input->init();
     ui->init();
-    mount->init();
 
+    model.mountReady = false;
     model.mode = ModeType::CONTROL;
     model.menu.idx = 0;
     if (!loadSettings())
@@ -67,11 +71,13 @@ void App::init()
 
     model.positionALT = model.positionAZM = 0;
 
+    params.mount = mount;
+    params.model = &model;
     xTaskCreatePinnedToCore(
                 MountTask,   /* Task function. */
                 "MountTask",     /* name of task. */
                 10000,       /* Stack size of task */
-                mount,        /* parameter of the task */
+                &params,        /* parameter of the task */
                 1,           /* priority of the task */
                 &mountTask,      /* Task handle to keep track of created task */
                 0);          /* pin task to core 0 */   

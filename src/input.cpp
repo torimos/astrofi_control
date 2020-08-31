@@ -36,7 +36,7 @@ InputState Input::get()
     state.ccAvailable = Serial.available();
     state.cc =  Serial.read();
 
-    state.b_pressed = val_X > 1000;
+    state.b_pressed = val_X > 2300;
     state.x = state.b_pressed ? 0 : map_pos(val_X)/10;
     state.y = map_pos(val_Y)/10;
     state.last_x = _prevInputState.x;
